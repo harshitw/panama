@@ -20,6 +20,8 @@ impl<T> Sender<T> {
         pub fn send(&mut self, t: T) {
                 let queue = self.inner.queue.lock().unwrap(); // lock return LockResult<MutexGuard<T>> as if the thread panics during lock, so data might not be in consitent state, to communicate this the thread sets a flag, the last thing that accessed this panic. Guard or PoisonError<Guard>
                 queue.push_back(t);
+                drop(queue); // drop the lock
+                self.inner.available.notify_one(); // notify one thread to wake up i.e. receiver
         }
 } 
 
